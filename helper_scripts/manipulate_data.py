@@ -2,9 +2,9 @@ import os, csv
 import xml.etree.ElementTree
 
 #helper scripts to manipulate data.  Need to change the following local variables:
-vote_repo = "/Users/lauren/Developer/congress-votes-servo/114"
-meta_fields_to_iter = ['majority', 'congress', 'session', 'rollcall-num', 'legis-num', 'vote-question', 'vote-result', 'vote-desc']
-all_fields = meta_fields_to_iter + ['r-y', 'r-no', 'r-p', 'r-nv', 'd-y', 'd-no', 'd-p', 'd-nv', 'ind-y', 'ind-n', 'i-p', 'i-nv']
+vote_repo = "/Users/lauren/Developer/congress-votes-servo"
+meta_fields_to_iter = ['majority', 'congress', 'chamber', 'session', 'rollcall-num', 'legis-num', 'vote-question', 'vote-result', 'vote-desc']
+all_fields = meta_fields_to_iter + ['file', 'r-y', 'r-no', 'r-p', 'r-nv', 'd-y', 'd-no', 'd-p', 'd-nv', 'ind-y', 'ind-n', 'i-p', 'i-nv']
 export_file = '../raw_data/raw_data.csv'
 
 def get_filepaths(directory):
@@ -46,8 +46,14 @@ def main():
             l = []
 
             for field in meta_fields_to_iter:
+                found = False
                 for r in root.iter(field):
+                    found = True
                     l.append(str(r.text))
+                if not found:
+                    l.append("")
+
+            l.append(file)
 
             for f in root.iter('totals-by-party'):
                 l.append(f[1].text)
@@ -68,7 +74,7 @@ def main():
 
     s = ""
     for field in all_fields:
-        s += '%s,' % (field)
+        s += '%s|' % (field)
     s += '\n'
 
     f.write(s)
@@ -76,7 +82,7 @@ def main():
     for row in export_data:
         s = ""
         for field in row:
-            s += '%s,' % (field)
+            s += '%s|' % (field)
         s += '\n'
         f.write(s)
 
