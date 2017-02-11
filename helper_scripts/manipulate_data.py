@@ -40,6 +40,11 @@ def main():
         if count % 100 == 0:
             print 'analyzing file %d' % (count)
 
+        # skip if it is not a house bill
+        if file.find('/h') == -1:
+            print 'skipping %s' % (file)
+            continue
+
         try:
             root = xml.etree.ElementTree.parse(file).getroot()
 
