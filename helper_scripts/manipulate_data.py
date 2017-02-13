@@ -4,8 +4,11 @@ import xml.etree.ElementTree
 #helper scripts to manipulate data.  Need to change the following local variables:
 vote_repo = "/Users/lauren/Developer/congress-votes-servo"
 meta_fields_to_iter = ['majority', 'congress', 'chamber', 'session', 'rollcall-num', 'legis-num', 'vote-question', 'vote-result', 'vote-desc']
-all_fields = meta_fields_to_iter + ['file', 'r-y', 'r-no', 'r-p', 'r-nv', 'd-y', 'd-no', 'd-p', 'd-nv', 'ind-y', 'ind-n', 'i-p', 'i-nv']
+all_fields = meta_fields_to_iter + ['file', 'r-y', 'r-no', 'r-p', 'r-nv', 'd-y', 'd-no', 'd-p', 'd-nv', 'ind-y', 'ind-n', 'i-p', 'i-nv', 'category']
 export_file = '../raw_data/raw_data.csv'
+
+#TO DO
+### Turn rows into a dictionary
 
 def get_filepaths(directory):
     """
@@ -50,11 +53,14 @@ def main():
 
             l = []
 
+            vote_desc = ''
             for field in meta_fields_to_iter:
                 found = False
                 for r in root.iter(field):
                     found = True
                     l.append(str(r.text))
+                    if field == 'vote-desc':
+                        vote_desc = str(r.text)
                 if not found:
                     l.append("")
 
@@ -65,6 +71,10 @@ def main():
                 l.append(f[2].text)
                 l.append(f[3].text)
                 l.append(f[4].text)
+
+            #find category
+            category = find_category(vote_desc)
+            l.append(category)
 
             export_data.append(l)
 
@@ -90,6 +100,42 @@ def main():
             s += '%s|' % (field)
         s += '\n'
         f.write(s)
+
+#categorize based on vote description
+def find_category(desc):
+    categories = {'gun_control': ['gun'],
+                  'health_care': ['affordable care act', 'aca', 'obamacare'],
+                  'education': ['school', 'education', 'student'],
+                  'immigration': ['immigration'],
+                  'budget': ['irs', 'business', 'trade'],
+                  'tax': ['tax'],
+                  'economy' : ['economy', 'Wall Street'],
+                  'military': ['military', 'veteran', 'VA', 'veterans', 'defense', 'iran', 'homeland'],
+                  'energy': ['energy', 'pipeline'],
+                  'environment': ['environment', 'water'],
+                  'infrastructure': ['infrastructure', 'transportation']
+                  }
+
+    desc_list = desc.lower().split(' ')
+
+    possible_categories = []
+    for cat in categories:
+        f = list(set(categories[cat]) & set(desc_list))
+        if len(f) > 0:
+            possible_categories.append(cat)
+
+    if len(possible_categories) == 0:
+        return 'other'
+
+    if len(possible_categories) == 1:
+        return possible_categories[0]
+
+    else:
+        cat_list = ''
+        for cat in possible_categories:
+            cat_list += cat + ' '
+        print 'returning cat list: %s' % (cat_list)
+        return cat_list
 
 
 main()
